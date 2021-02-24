@@ -1,3 +1,6 @@
+//#define __DEBUG_PRINTF__
+
+
 /*------------------------------------------------------------*/
 #include "main.h"
 #include "complete.h"
@@ -84,7 +87,9 @@ void display_bmp(u16 W, u16 H, u32 *data)
     H,                          //h
     data                        //array
     );
+#ifdef __DEBUG_PRINTF__
     printf("array displayed\n");
+#endif
 }
 //=============================================================
 
@@ -130,6 +135,9 @@ int write_embed(void *embed_file, const int embed_size, char* path, char* filena
 		}
 		close(fd);
 	}
+	#ifdef __DEBUG_PRINTF__
+	printf("embed file written");
+	#endif
 	return 0;
 }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -172,7 +180,9 @@ int install(void)
 	if (retorno < 0) {return 6;}
 	retorno = write_embed(&opl_elf, size_opl_elf, "mc0:/APPS","OPNPS2LD.ELF");
 	if (retorno < 0) {return 6;}
-	
+	#ifdef __DEBUG_PRINTF__
+	printf("install finished");
+	#endif
 	#define ARRAY_ENTRIES	64
 	static sceMcTblGetDir mcDirAAA[ARRAY_ENTRIES] __attribute__((aligned(64)));
 	static sceMcStDateTime maximahora; //Maxium Timestamp, for the ones who does not speak Spanish
@@ -187,7 +197,9 @@ int install(void)
 	mcDirAAA->_Create = maximahora;
 	mcSetFileInfo(0, 0, "OPENTUNA", mcDirAAA, 0x02);
 	mcSync(0, NULL, &ret);
-	
+	#ifdef __DEBUG_PRINTF__
+	printf("timestamp changed");
+	#endif
 	return 0;
 }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -310,6 +322,9 @@ int main (int argc, char *argv[])
 		if((new_pad & PAD_CIRCLE) && (menuactual == 101)){
 			menuactual = 102;
 			display_bmp(640, 448, wait);
+			#ifdef __DEBUG_PRINTF__
+			printf("begin install");
+			#endif
 			iz = install();
 			if(iz == 0){
 				menuactual = 104;
