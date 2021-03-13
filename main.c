@@ -1,6 +1,5 @@
 //#define __DEBUG_PRINTF__
 
-
 /*------------------------------------------------------------*/
 #include "main.h"
 #include "complete.h"
@@ -14,7 +13,6 @@
 #include "MensajeE.h"
 #include "MensajeF.h"
 //*/
-
 
 //----------------------------------------//
 extern u8 opentuna_icn[];
@@ -34,8 +32,6 @@ extern int size_apps_icn;
 //----------------------------------------//
 extern u8 apps_sys[];
 extern int size_apps_sys;
-
-
 
 int pad_inited = 0;
 
@@ -101,7 +97,6 @@ void InitPS2()
     SifInitIopHeap();
     SifLoadFileInit();
     fioInit();
-   
 
     sbv_patch_disable_prefix_check();
     SifLoadModule("rom0:SIO2MAN", 0, NULL);
@@ -181,7 +176,7 @@ int install(void)
 	retorno = write_embed(&opl_elf, size_opl_elf, "mc0:/APPS","OPNPS2LD.ELF");
 	if (retorno < 0) {return 6;}
 	#ifdef __DEBUG_PRINTF__
-	printf("install finished");
+	printf("installation finished");
 	#endif
 	#define ARRAY_ENTRIES	64
 	static sceMcTblGetDir mcDirAAA[ARRAY_ENTRIES] __attribute__((aligned(64)));
@@ -203,7 +198,6 @@ int install(void)
 	return 0;
 }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 //close program and go to browser
 void PS2_browser(void)
 {
@@ -215,7 +209,6 @@ void PS2_browser(void)
 					    "	syscall;"
 					    "	nop;");//*/
 }
-
 
 //--------------------------------------------------------------
 
@@ -256,7 +249,6 @@ void CleanUp() //trimmed from FMCB
   	gs_fill_rect(0, 0, gs_get_max_x(), gs_get_max_y());	
 }
 
-
 int main (int argc, char *argv[])
 {
 	int fdn, ret, ret1;
@@ -283,8 +275,8 @@ int main (int argc, char *argv[])
 				(romver[4] == 'U' ? 'A' : romver[4]))));
 
 	if (romver[4] == 'E') VMode = PAL; // Set Video mode
-    else VMode = NTSC;
-    if (VMode == PAL) { gs_init(PAL_640_512_32); } // set video mode
+    	else VMode = NTSC;
+    	if (VMode == PAL) { gs_init(PAL_640_512_32); } // set video mode
 		else if (VMode == NTSC) { gs_init(NTSC_640_448_32); }	
 	
 	display_bmp(640, 448, inst);
