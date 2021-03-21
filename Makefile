@@ -4,7 +4,7 @@ EE_BIN_STRIPPED = stripped.elf
 EE_OBJS = main.o gs.o pad.o  gs_asm.o ps2_asm.o dma_asm.o
 EE_OBJS += opentuna_icn.o opentuna_sys.o opl_elf.o ule_elf.o apps_icn.o apps_sys.o
 EE_SRC = opentuna_icn.s opentuna_sys.s opl_elf.s ule_elf.s apps_icn.s apps_sys.s
-EE_LIBS = -ldebug -lcdvd -lpatches -lfileXio -lpad -lmc
+EE_LIBS = -ldebug -lcdvd -lpatches -lpad -lmc
 
 all:
 	$(MAKE) $(EE_BIN_PACKED)
