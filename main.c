@@ -91,7 +91,6 @@ void display_bmp(u16 W, u16 H, u32 *data)
 
 void InitPS2()
 {
-    int ret;
     //init_scr();
     Reset_IOP();
     SifInitIopHeap();
@@ -105,7 +104,7 @@ void InitPS2()
     SifLoadModule("rom0:PADMAN", 0, NULL);
 
     //Faltaba iniciar la MC (alexparrado)
-    mcInit(MC_TYPE_MC);	    
+    mcInit(MC_TYPE_MC);
 
     setupPad();
     waitAnyPadReady();
@@ -139,7 +138,7 @@ int write_embed(void *embed_file, const int embed_size, char* path, char* filena
 //return 0 = ok, return 1 = error
 int install(void)
 {
-	int x, ret, retorno;
+	int ret, retorno;
 	static int mc_Type, mc_Free, mc_Format;
 	mcGetInfo(0,0,&mc_Type,&mc_Free,&mc_Format);
 	mcSync(0, NULL, &ret);
@@ -248,13 +247,13 @@ void CleanUp() //trimmed from FMCB
 
 int main (int argc, char *argv[])
 {
-	int fdn, ret, ret1;
-	char* region_char;
-	u32 old_pad;
+	int fdn;//, ret, ret1;
+	char* region_char = NULL;
+	//u32 old_pad;
 	u8 romver[16];
-	static int pad_press = 0;
-	static int pad_button = 0x0100; // first pad button is L2	
-	static int num_buttons = 4; 	  // buttons to check; 	  
+	//static int pad_press = 0;
+	//static int pad_button = 0x0100; // first pad button is L2	
+	//static int num_buttons = 4; 	  // buttons to check; 	  
 	VMode = NTSC;
 	
 	// Loads Needed modules

@@ -35,6 +35,8 @@
 
 #include "main.h"
 
+u32 new_pad;
+
 //________________ From uLaunchELF ______________________
 
 static char padBuf_t[2][256] __attribute__((aligned(64)));
