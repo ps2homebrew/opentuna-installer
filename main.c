@@ -141,13 +141,10 @@ int install(void)
 {
 	int x, ret, retorno;
 	static int mc_Type, mc_Free, mc_Format;
-	mcGetInfo(0, 0, &mc_Type, &mc_Free, &mc_Format); 
-	mcSync(0, NULL, &ret);
-	//Done twice... blame FMCB
 	mcGetInfo(0,0,&mc_Type,&mc_Free,&mc_Format);
 	mcSync(0, NULL, &ret);
 	//If there's no MC, we have an error:
-	if (ret != 0){return 1;}
+	if (ret != -1){return 1;}
 	//If it is not a PS2 MC, we have an error:
 	if (mc_Type != 2){return 2;}
 	//If there's no free space, we have an error:
