@@ -39,4 +39,4 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest"
         title: "Latest build"
-        files: packed_installer.elf
+        files: OpenTuna_Installer.elf
