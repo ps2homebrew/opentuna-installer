@@ -1,5 +1,5 @@
 EE_BIN = Installer.elf
-EE_BIN_PACKED = packed_installer.elf
+EE_BIN_PACKED = OpenTuna_Installer.elf
 EE_BIN_STRIPPED = stripped.elf
 EE_OBJS = main.o gs.o pad.o  gs_asm.o ps2_asm.o dma_asm.o
 EE_OBJS += opentuna_icn.o opentuna_sys.o opl_elf.o ule_elf.o apps_icn.o apps_sys.o
