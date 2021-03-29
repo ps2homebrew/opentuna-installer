@@ -37,6 +37,5 @@ $(EE_BIN_STRIPPED): $(EE_BIN)
 $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	ps2-packer $< $@ > /dev/null
 
-
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
