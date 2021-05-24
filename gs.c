@@ -52,11 +52,11 @@ typedef struct
 	u16 psm;
 	u16 bpp;
 	u16 magh;
-} vmode_t __attribute__((aligned(16)));
+} __attribute__((aligned(16))) vmode_t;
 
 vmode_t vmodes[] = {
-	{PAL,  640, 512, 0, 32, 4},		
-	{NTSC, 640, 448, 0, 32, 4}	
+	{PAL,  640, 512, 0, 32, 4},
+	{NTSC, 640, 448, 0, 32, 4}
 };
 
 static vmode_t *cur_mode;
@@ -73,6 +73,8 @@ static u16	gs_view_x0=0;	// current viewport coordinates
 static u16	gs_view_x1=1;
 static u16	gs_view_y0=0;
 static u16	gs_view_y1=1;
+
+int VMode;
 
 //---------------------------------------------------------------------------
 

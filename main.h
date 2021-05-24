@@ -5,7 +5,6 @@
 #include <tamtypes.h>
 #include <kernel.h>
 #include <sifrpc.h>
-#include <fileio.h>
 #include <sifrpc.h>
 #include <iopcontrol.h>
 #include <iopheap.h>
@@ -18,6 +17,9 @@
 //#include <libcdvd.h>
 #include <debug.h>
 
+#define NEWLIB_PORT_AWARE
+#include <fileio.h>
+
 
 #define MAX_PATH 260
 
@@ -27,7 +29,7 @@
 #define NTSC			2
 #define PAL				3
 
-int VMode;
+extern int VMode;
 
 typedef enum {
 	PAL_640_512_32,	
@@ -45,7 +47,7 @@ void gs_print_bitmap(u16 x, u16 y, u16 w, u16 h, u32 *data);
 
 /* pad.c */
 
-u32 new_pad;
+extern u32 new_pad;
 
 int readPad(void);
 void waitAnyPadReady(void);
