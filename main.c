@@ -131,7 +131,7 @@ static int install(int mcport)
 	int ret, retorno;
 	static int mc_Type, mc_Free, mc_Format;
 
-	mcGetInfo(0, 0, &mc_Type, &mc_Free, &mc_Format);
+	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
 	mcSync(0, NULL, &ret);
 
 	//If there's no MC, we have an error:
@@ -144,17 +144,25 @@ static int install(int mcport)
 	if (mc_Free < 1727){return 3;}
 
 	//If the files exists, we have an error:
+	if ( mcport == 0){
 	if (file_exists("mc0:/OPENTUNA/icon.icn")) {return 4;}
 	if (file_exists("mc0:/OPENTUNA/icon.sys")) {return 4;}
 	if (file_exists("mc0:/APPS/icon.sys")) {return 5;}
 	if (file_exists("mc0:/APPS/tunacan.icn")) {return 5;}
 	if (file_exists("mc0:/APPS/ULE.ELF")) {return 5;}
 	if (file_exists("mc0:/APPS/OPNPS2LD.ELF")) {return 5;}
-
-	ret = mcMkDir(0, 0, "OPENTUNA");
-	mcSync(mcport, NULL, &ret);
-	ret = mcMkDir(0, 0, "APPS");
-	mcSync(mcport, NULL, &ret);
+	} else {
+	if (file_exists("mc1:/OPENTUNA/icon.icn")) {return 4;}
+	if (file_exists("mc1:/OPENTUNA/icon.sys")) {return 4;}
+	if (file_exists("mc1:/APPS/icon.sys")) {return 5;}
+	if (file_exists("mc1:/APPS/tunacan.icn")) {return 5;}
+	if (file_exists("mc1:/APPS/ULE.ELF")) {return 5;}
+	if (file_exists("mc1:/APPS/OPNPS2LD.ELF")) {return 5;}
+	}
+	ret = mcMkDir(mcport, 0, "OPENTUNA");
+	mcSync(0, NULL, &ret);
+	ret = mcMkDir(mcport, 0, "APPS");
+	mcSync(0, NULL, &ret);
 
 	retorno = write_embed(&opentuna_icn, size_opentuna_icn, "OPENTUNA","icon.icn",mcport);
 	if (retorno < 0) {return 6;}
