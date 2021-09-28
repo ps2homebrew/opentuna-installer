@@ -102,20 +102,19 @@ static void InitPS2(void)
 //write &embed_file to path
 // returns:
 // -1 fail to open | -2 failed to write | 0 succes
-static int write_embed(void *embed_file, const int embed_size, char* path, char* filename)
+static int write_embed(void *embed_file, const int embed_size, char* folder, char* filename, int mcport)
 {
 	int fd, ret;
 	char target[MAX_PATH];
-
-	sprintf(target, "%s/%s", path, filename);
+	sprintf(target, "mc%u:/%s/%s", mcport, folder, filename);
 	if ((ret = open(target, O_RDONLY)) < 0)  //if not exist
 	{
 		if ((fd = open(target, O_CREAT | O_WRONLY | O_TRUNC)) < 0) {
-			return -1;  //Failed open
+			return -1;
 		}
 		ret = write(fd, embed_file, embed_size);
 		if (ret != embed_size) {
-			return -2;  //Failed writing
+			return -2;
 		}
 		close(fd);
 	}
@@ -123,12 +122,10 @@ static int write_embed(void *embed_file, const int embed_size, char* path, char*
 #ifdef __DEBUG_PRINTF__
 	printf("embed file written: %s\n", target);
 #endif
-
 	return 0;
-}
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //return 0 = ok, return 1 = error
-static int install(void)
+static int install(int mcport)
 {
 	int ret, retorno;
 	static int mc_Type, mc_Free, mc_Format;
@@ -154,21 +151,21 @@ static int install(void)
 	if (file_exists("mc0:/APPS/OPNPS2LD.ELF")) {return 5;}
 
 	ret = mcMkDir(0, 0, "OPENTUNA");
-	mcSync(0, NULL, &ret);
+	mcSync(mcport, NULL, &ret);
 	ret = mcMkDir(0, 0, "APPS");
-	mcSync(0, NULL, &ret);
+	mcSync(mcport, NULL, &ret);
 
-	retorno = write_embed(&opentuna_icn, size_opentuna_icn, "mc0:/OPENTUNA","icon.icn");
+	retorno = write_embed(&opentuna_icn, size_opentuna_icn, "OPENTUNA","icon.icn",mcport);
 	if (retorno < 0) {return 6;}
-	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "mc0:/OPENTUNA","icon.sys");
+	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA","icon.sys",mcport);
 	if (retorno < 0) {return 6;}
-	retorno = write_embed(&apps_sys, size_apps_sys, "mc0:/APPS","icon.sys");
+	retorno = write_embed(&apps_sys, size_apps_sys, "APPS","icon.sys",mcport);
 	if (retorno < 0) {return 6;}
-	retorno = write_embed(&apps_icn, size_apps_icn, "mc0:/APPS","tunacan.icn");
+	retorno = write_embed(&apps_icn, size_apps_icn, "APPS","tunacan.icn",mcport);
 	if (retorno < 0) {return 6;}
-	retorno = write_embed(&ule_elf, size_ule_elf, "mc0:/APPS","ULE.ELF");
+	retorno = write_embed(&ule_elf, size_ule_elf, "APPS","ULE.ELF",mcport);
 	if (retorno < 0) {return 6;}
-	retorno = write_embed(&opl_elf, size_opl_elf, "mc0:/APPS","OPNPS2LD.ELF");
+	retorno = write_embed(&opl_elf, size_opl_elf, "APPS","OPNPS2LD.ELF",mcport);
 	if (retorno < 0) {return 6;}
 
 #ifdef __DEBUG_PRINTF__
@@ -187,7 +184,7 @@ static int install(void)
 	maximahora.Year = 2099;
 	mcDirAAA->_Modify = maximahora;
 	mcDirAAA->_Create = maximahora;
-	mcSetFileInfo(0, 0, "OPENTUNA", mcDirAAA, 0x02);
+	mcSetFileInfo(mcport, 0, "OPENTUNA", mcDirAAA, 0x02);
 	mcSync(0, NULL, &ret);
 
 #ifdef __DEBUG_PRINTF__
@@ -278,13 +275,17 @@ int main (int argc, char *argv[])
 	while (1) {
 		readPad();
 
-		if (((new_pad & PAD_CROSS) && (menuactual == 101)) || ((new_pad & PAD_CIRCLE) && (menuactual == 101))) {
+		if (((new_pad & PAD_L1) && (menuactual == 101)) || ((new_pad & PAD_R1) && (menuactual == 101))) {
 			menuactual = 102;
 			display_bmp(640, 448, wait);
 #ifdef __DEBUG_PRINTF__
 			printf("begin install\n");
 #endif
-			iz = install();
+			if (new_pad & PAD_L1)
+			iz = install(0);
+			else
+			iz = install(1);
+			
 			if(iz == 0){
 				menuactual = 104;
 				display_bmp(640, 448, complete);
