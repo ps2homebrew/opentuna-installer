@@ -123,6 +123,7 @@ static int write_embed(void *embed_file, const int embed_size, char* folder, cha
 	printf("embed file written: %s\n", target);
 #endif
 	return 0;
+}
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //return 0 = ok, return 1 = error
 static int install(int mcport)
