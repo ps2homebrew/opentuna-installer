@@ -4,7 +4,7 @@
 #include "main.h"
 #include "complete.h"
 #include "error.h"
-#include "inst.h"
+//#include "inst.h"
 #include "wait.h"
 #include "MensajeA.h"
 #include "MensajeB.h"
@@ -18,16 +18,42 @@
 #include "MANUAL_INST_FATS.h"
 #include "MANUAL_INST_SLIMS.h"
 //*/
+#define ASK_MCPORT(mcport) \
+display_bmp(640, 448, MCPORT_QUERY); \
+readPad(); \
+while(1){ if ((new_pad & PAD_L1) || (new_pad & PAD_R1)){ if (new_pad & PAD_L1) {mcport = 0;} else {mcport = 1;} }}
+
 enum ICN
 {
 	SLIMS = 0,// fat 0x190 and every 0x2?? ROM
 	FATS,// 0x110, 0x120, 0x150, 0x160
 	FAT170,// 0x170
-	PROTOKERNELS // this corresponds to rom 0x100 and 0x101, parrado won´t make the icons, but i will leavi it here in case someone makes it faster than instatuna
+	PROTOKERNELS, // this corresponds to rom 0x100 and 0x101, parrado won´t make the icons, but i will leavi it here in case someone makes it faster than instatuna
+	UNSUPPORTED,
 };
+
+int GetIconType(unsigned long int ROMVERSION {
+	int icontype;
+	if (ROMVERSION >= 0x190) icontype = SLIMS;
+	
+	else if ( (ROMVERSION < 0x190) && (ROMVERSION >= 0x110) icontype = FATS;
+	
+	else if (ROMVERSION == 0x170) icontype = FAT170;
+	
+	else icontype = UNSUPPORTED;
+	
+	return icontype;
+}
+
 //----------------------------------------//
 extern u8 opentuna_icn[];
 extern int size_opentuna_icn;
+//----------------------------------------//
+extern u8 opentuna_fats[];
+extern int size_opentuna_fats;
+//----------------------------------------//
+extern u8 opentuna_fat170[];
+extern int size_opentuna_fat170;
 //----------------------------------------//
 extern u8 opentuna_sys[];
 extern int size_opentuna_sys;
@@ -139,7 +165,7 @@ static int write_embed(void *embed_file, const int embed_size, char* folder, cha
 //return 0 = ok, return 1 = error
 static int install(int mcport, int icon_variant)
 {
-	int ret, retorno;
+	int ret, retorno, mcport = 0;
 	static int mc_Type, mc_Free, mc_Format;
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
@@ -269,8 +295,9 @@ static void PS2_browser(void)
 
 int main (int argc, char *argv[])
 {
-	int fdn;
-	char romver[16];
+	int fdn, icontype;
+	unsigned long int ROM_VERSION;
+	char romver[5];
 	VMode = NTSC;
 
 	// Loads Needed modules
@@ -279,11 +306,13 @@ int main (int argc, char *argv[])
 	gs_reset(); // Reset GS
 	if((fdn = open("rom0:ROMVER", O_RDONLY)) > 0) // Reading ROMVER
 	{
-		read(fdn, romver, sizeof romver);
+		read(fdn, romver, 4);
 		close(fdn);
 
 		if (romver[4] == 'E')
 			VMode = PAL;
+		romver[4] = '\0';
+		strtoul(ROM_VERSION_STR, romver, 4); //convert ROM version to unsigned long int for further use on automatic Install
 	}
 
 	if (VMode == PAL)
@@ -291,29 +320,30 @@ int main (int argc, char *argv[])
 	else
 		gs_init(NTSC_640_448_32);
 
-	display_bmp(640, 448, inst);
+	display_bmp(640, 448, WELCOME);
 
 	waitAnyPadReady();
 	pad_inited = 1;
-
+	icontype = GetIconType(ROM_VERSION);
 	int iz = 1;
 	int menuactual = 101;//101: Initial Menu, 102: Installing (not needed), 103: Error, 104: Done
 
-	display_bmp(640, 448, inst);//Again, just in case of an old japanese console
+	display_bmp(640, 448, WELCOME);//Again, just in case of an old japanese console
 	while (1) {
 		readPad();
 
 		if (((new_pad & PAD_L1) && (menuactual == 101)) || ((new_pad & PAD_R1) && (menuactual == 101))) {
 			menuactual = 102;
-			display_bmp(640, 448, wait);
-#ifdef __DEBUG_PRINTF__
-			printf("begin install\n");
-#endif
-			if (new_pad & PAD_L1)
-			iz = install(0);
-			else
-			iz = install(1);
-			
+			if (new_pad & PAD_L1)// manual install
+			{
+				ASK_MCPORT(mcport)
+				display_bmp(640, 448, wait);
+				iz = install(mcport);
+			} else {// auto install (R1)
+				ASK_MCPORT(mcport)
+				display_bmp(640, 448, wait);
+				iz = install(mcport,icontype);
+			}
 			if(iz == 0){
 				menuactual = 104;
 				display_bmp(640, 448, complete);
