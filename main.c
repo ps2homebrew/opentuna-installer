@@ -12,6 +12,11 @@
 #include "MensajeD.h"
 #include "MensajeE.h"
 #include "MensajeF.h"
+#include "welcome.h"
+#include "MANUAL_INST.h"
+#include "MANUAL_INST_FAT170.h"
+#include "MANUAL_INST_FATS.h"
+#include "MANUAL_INST_SLIMS.h"
 //*/
 
 //----------------------------------------//
