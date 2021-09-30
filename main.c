@@ -200,16 +200,15 @@ static int install(int mcport, int icon_variant)
 	mcSync(0, NULL, &ret);
 	ret = mcMkDir(mcport, 0, "APPS");
 	mcSync(0, NULL, &ret);
-	if (icon_variant == SLIMS) {
+	retorno = -12;///to ensure installation quits if none of the hacked icons are written
+	       if (icon_variant ==  SLIMS) {
 		retorno = write_embed(&opentuna_icn, size_opentuna_icn, "OPENTUNA","icon.icn",mcport);
-		if (retorno < 0) {return 6;}
-	} else if (icon_variant == FATS) {
+	} else if (icon_variant ==   FATS) {
 		retorno = write_embed(&opentuna_fats, size_opentuna_fats, "OPENTUNA", "icon.icn", mcport);
-		if (retorno < 0) {return 6;}
 	} else if (icon_variant == FAT170) {
 		retorno = write_embed(&opentuna_fat170, size_opentuna_fat170, "OPENTUNA","icon.icn",mcport);
 	}
-	
+	if (retorno < 0) {return 6;}
 	//<FILES SHARED BY ALL ICONS FROM NOW ON>
 	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA","icon.sys",mcport);
 	if (retorno < 0) {return 6;}
