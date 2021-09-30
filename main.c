@@ -17,7 +17,7 @@
 #include "MANUAL_INST_FAT170.h"
 #include "MANUAL_INST_FATS.h"
 #include "MANUAL_INST_SLIMS.h"
-//*/
+
 #define ASK_MCPORT(mcport) \
 display_bmp(640, 448, MCPORT_QUERY); \
 readPad(); \
@@ -32,22 +32,21 @@ enum ICN
 	UNSUPPORTED,
 };
 
-int GetIconType(unsigned long int ROMVERSION {
-	int icontype;
+int GetIconType(unsigned long int ROMVERSION) {
+	int icontype=UNSUPPORTED;	
+
 	if (ROMVERSION >= 0x190) icontype = SLIMS;
 	
-	else if ( (ROMVERSION < 0x190) && (ROMVERSION >= 0x110) icontype = FATS;
+	if ( (ROMVERSION < 0x190) && (ROMVERSION >= 0x110)) icontype = FATS;
 	
-	else if (ROMVERSION == 0x170) icontype = FAT170;
-	
-	else icontype = UNSUPPORTED;
+	if (ROMVERSION == 0x170) icontype = FAT170;	
 	
 	return icontype;
 }
 
 //----------------------------------------//
-extern u8 opentuna_icn[];
-extern int size_opentuna_icn;
+extern u8 opentuna_slims[];
+extern int size_opentuna_slims;
 //----------------------------------------//
 extern u8 opentuna_fats[];
 extern int size_opentuna_fats;
@@ -165,7 +164,7 @@ static int write_embed(void *embed_file, const int embed_size, char* folder, cha
 //return 0 = ok, return 1 = error
 static int install(int mcport, int icon_variant)
 {
-	int ret, retorno, mcport = 0;
+	int ret, retorno;
 	static int mc_Type, mc_Free, mc_Format;
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
@@ -202,7 +201,7 @@ static int install(int mcport, int icon_variant)
 	mcSync(0, NULL, &ret);
 	retorno = -12;///to ensure installation quits if none of the hacked icons are written
 	       if (icon_variant ==  SLIMS) {
-		retorno = write_embed(&opentuna_icn, size_opentuna_icn, "OPENTUNA","icon.icn",mcport);
+		retorno = write_embed(&opentuna_slims, size_opentuna_slims, "OPENTUNA","icon.icn",mcport);
 	} else if (icon_variant ==   FATS) {
 		retorno = write_embed(&opentuna_fats, size_opentuna_fats, "OPENTUNA", "icon.icn", mcport);
 	} else if (icon_variant == FAT170) {
@@ -298,6 +297,7 @@ int main (int argc, char *argv[])
 	unsigned long int ROM_VERSION;
 	char romver[5];
 	VMode = NTSC;
+	int mcport;
 
 	// Loads Needed modules
 	InitPS2();
@@ -311,7 +311,7 @@ int main (int argc, char *argv[])
 		if (romver[4] == 'E')
 			VMode = PAL;
 		romver[4] = '\0';
-		strtoul(ROM_VERSION_STR, romver, 4); //convert ROM version to unsigned long int for further use on automatic Install
+		ROM_VERSION = strtoul(romver, NULL, 16); //convert ROM version to unsigned long int for further use on automatic Install
 	}
 
 	if (VMode == PAL)
@@ -335,11 +335,11 @@ int main (int argc, char *argv[])
 			menuactual = 102;
 			if (new_pad & PAD_L1)// manual install
 			{
-				ASK_MCPORT(mcport)
+				//ASK_MCPORT(mcport)
 				display_bmp(640, 448, wait);
-				iz = install(mcport);
+				iz = install(mcport,icontype);
 			} else {// auto install (R1)
-				ASK_MCPORT(mcport)
+				//ASK_MCPORT(mcport)
 				display_bmp(640, 448, wait);
 				iz = install(mcport,icontype);
 			}
