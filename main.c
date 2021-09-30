@@ -18,7 +18,13 @@
 #include "MANUAL_INST_FATS.h"
 #include "MANUAL_INST_SLIMS.h"
 //*/
-
+enum ICN
+{
+	SLIMS = 0,// fat 0x190 and every 0x2?? ROM
+	FATS,// 0x110, 0x120, 0x150, 0x160
+	FAT170,// 0x170
+	PROTOKERNELS // this corresponds to rom 0x100 and 0x101, parrado won´t make the icons, but i will leavi it here in case someone makes it faster than instatuna
+};
 //----------------------------------------//
 extern u8 opentuna_icn[];
 extern int size_opentuna_icn;
@@ -131,7 +137,7 @@ static int write_embed(void *embed_file, const int embed_size, char* folder, cha
 }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //return 0 = ok, return 1 = error
-static int install(int mcport)
+static int install(int mcport, int icon_variant)
 {
 	int ret, retorno;
 	static int mc_Type, mc_Free, mc_Format;
@@ -168,9 +174,17 @@ static int install(int mcport)
 	mcSync(0, NULL, &ret);
 	ret = mcMkDir(mcport, 0, "APPS");
 	mcSync(0, NULL, &ret);
-
-	retorno = write_embed(&opentuna_icn, size_opentuna_icn, "OPENTUNA","icon.icn",mcport);
-	if (retorno < 0) {return 6;}
+	if (icon_variant == SLIMS) {
+		retorno = write_embed(&opentuna_icn, size_opentuna_icn, "OPENTUNA","icon.icn",mcport);
+		if (retorno < 0) {return 6;}
+	} else if (icon_variant == FATS) {
+		retorno = write_embed(&opentuna_fats, size_opentuna_fats, "OPENTUNA", "icon.icn", mcport);
+		if (retorno < 0) {return 6;}
+	} else if (icon_variant == FAT170) {
+		retorno = write_embed(&opentuna_fat170, size_opentuna_fat170, "OPENTUNA","icon.icn",mcport);
+	}
+	
+	//<FILES SHARED BY ALL ICONS FROM NOW ON>
 	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA","icon.sys",mcport);
 	if (retorno < 0) {return 6;}
 	retorno = write_embed(&apps_sys, size_apps_sys, "APPS","icon.sys",mcport);
