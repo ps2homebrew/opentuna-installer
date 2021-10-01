@@ -190,6 +190,7 @@ static int install(int mcport, int icon_variant)
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
 	mcSync(0, NULL, &ret);	
+	printf("mc_Type: %d\n",mc_Type);
 
 	//If there's no MC, we have an error:
 	if (ret != -1)
