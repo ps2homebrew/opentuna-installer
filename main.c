@@ -150,8 +150,6 @@ static void InitPS2(void)
 	SifExecModuleBuffer(MCSERV_irx, size_MCSERV_irx, 0, NULL, NULL);
 	mcInit(MC_TYPE_XMC);
 	PadInitPads();
-	
-
 }
 
 //write &embed_file to path
@@ -189,8 +187,10 @@ static int install(int mcport, int icon_variant)
 	static int mc_Type, mc_Free, mc_Format;
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
-	mcSync(0, NULL, &ret);	
-	printf("mc_Type: %d\n",mc_Type);
+	mcSync(0, NULL, &ret);
+#ifdef __DEBUG_PRINTF__
+	printf("mc_Type: %d\n", mc_Type);
+#endif
 
 	//If there's no MC, we have an error:
 	if (ret != -1)
