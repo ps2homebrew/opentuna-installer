@@ -1,14 +1,13 @@
 //#define __DEBUG_PRINTF__
 #ifdef __DEBUG_PRINTF__
 #define PRINTF(arg...) printf(arg...)
-#else 	
+#else
 #define PRINTF(arg...)
 #endif
 /*------------------------------------------------------------*/
 #include "main.h"
 #include "complete.h"
 #include "error.h"
-//#include "inst.h"
 #include "wait.h"
 #include "MensajeA.h"
 #include "MensajeB.h"
@@ -81,6 +80,7 @@ extern int size_apps_icn;
 extern u8 apps_sys[];
 extern int size_apps_sys;
 
+// Embedded IOP drivers
 extern unsigned char SIO2MAN_irx[];
 extern unsigned int size_SIO2MAN_irx;
 
@@ -284,7 +284,7 @@ static int install(int mcport, int icon_variant)
 	{
 		return 6;
 	}
-	//<FILES SHARED BY ALL ICONS FROM NOW ON>
+	// <FILES SHARED BY ALL ICONS FROM NOW ON>
 	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA", "icon.sys", mcport);
 	if (retorno < 0)
 	{
@@ -399,7 +399,6 @@ void error_message(int iz)
 	case 5:
 		gs_print_bitmap(192, 343, 256, 40, MensajeE);
 		break;
-
 	case 6:
 		gs_print_bitmap(192, 343, 256, 40, MensajeF);
 		break;
@@ -457,6 +456,7 @@ int main(int argc, char *argv[])
 	else
 		state = STATE_UNSUPPORTED;
 
+	//Main menu rendering through Finite State Machine
 	while (1)
 	{
 
@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
 
 		case STATE_MC1:
 			mcport = 1;
-			display_bmp(640, 448, INST_SLOT_2); //Again, just in case of an old japanese console
+			display_bmp(640, 448, INST_SLOT_2);
 
 			key = wait_key(-1);
 
@@ -508,7 +508,7 @@ int main(int argc, char *argv[])
 
 		case STATE_UNSUPPORTED:
 
-			display_bmp(640, 448, NON_COMPATIBLE); //Again, just in case of an old japanese console
+			display_bmp(640, 448, NON_COMPATIBLE);
 			key = wait_key(PAD_START);
 			state = STATE_BROWSER;
 

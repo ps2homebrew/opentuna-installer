@@ -21,7 +21,6 @@ apps_icn.s:
 apps_sys.s:
 	bin2s INSTALL/APPS/icon.sys apps_sys.s apps_sys
 
-
 OpenTuna_sys.s:
 	bin2s INSTALL/OPENTUNA/icon.sys OpenTuna_sys.s opentuna_sys
 
