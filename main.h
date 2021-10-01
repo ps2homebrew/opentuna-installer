@@ -48,7 +48,7 @@ void gs_print_bitmap(u16 x, u16 y, u16 w, u16 h, u32 *data);
 
 /* pad.c */
 
-extern u32 new_pad;
+//extern u32 new_pad;
 
 int readPad(void);
 void waitAnyPadReady(void);

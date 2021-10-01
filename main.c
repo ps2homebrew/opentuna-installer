@@ -12,35 +12,43 @@
 #include "MensajeD.h"
 #include "MensajeE.h"
 #include "MensajeF.h"
-#include "welcome.h"
-#include "MANUAL_INST.h"
-#include "MANUAL_INST_FAT170.h"
-#include "MANUAL_INST_FATS.h"
-#include "MANUAL_INST_SLIMS.h"
-
-#define ASK_MCPORT(mcport) \
-display_bmp(640, 448, MCPORT_QUERY); \
-readPad(); \
-while(1){ if ((new_pad & PAD_L1) || (new_pad & PAD_R1)){ if (new_pad & PAD_L1) {mcport = 0;} else {mcport = 1;} }}
+#include "NON_COMPATIBLE.h"
+#include "INST_SLOT_2.h"
+#include "INST_SLOT_1.h"
 
 enum ICN
 {
-	SLIMS = 0,// fat 0x190 and every 0x2?? ROM
-	FATS,// 0x110, 0x120, 0x150, 0x160
-	FAT170,// 0x170
+	SLIMS = 0,	  // fat 0x190 and every 0x2?? ROM
+	FATS,		  // 0x110, 0x120, 0x150, 0x160
+	FAT170,		  // 0x170
 	PROTOKERNELS, // this corresponds to rom 0x100 and 0x101, parrado won´t make the icons, but i will leavi it here in case someone makes it faster than instatuna
 	UNSUPPORTED,
 };
 
-int GetIconType(unsigned long int ROMVERSION) {
-	int icontype=UNSUPPORTED;	
+enum STATE
+{
+	STATE_MC0,
+	STATE_MC1,
+	STATE_INSTALL,
+	STATE_FINISH,
+	STATE_ERROR,
+	STATE_BROWSER,
+	STATE_UNSUPPORTED,
+};
 
-	if (ROMVERSION >= 0x190) icontype = SLIMS;
-	
-	if ( (ROMVERSION < 0x190) && (ROMVERSION >= 0x110)) icontype = FATS;
-	
-	if (ROMVERSION == 0x170) icontype = FAT170;	
-	
+int GetIconType(unsigned long int ROMVERSION)
+{
+	int icontype = UNSUPPORTED;
+
+	if (ROMVERSION >= 0x190)
+		icontype = SLIMS;
+
+	if ((ROMVERSION < 0x190) && (ROMVERSION >= 0x110))
+		icontype = FATS;
+
+	if (ROMVERSION == 0x170)
+		icontype = FAT170;
+
 	return icontype;
 }
 
@@ -68,6 +76,18 @@ extern int size_apps_icn;
 //----------------------------------------//
 extern u8 apps_sys[];
 extern int size_apps_sys;
+
+extern unsigned char SIO2MAN_irx[];
+extern unsigned int size_SIO2MAN_irx;
+
+extern unsigned char PADMAN_irx[];
+extern unsigned int size_PADMAN_irx;
+
+extern unsigned char MCMAN_irx[];
+extern unsigned int size_MCMAN_irx;
+
+extern unsigned char MCSERV_irx[];
+extern unsigned int size_MCSERV_irx;
 
 static int pad_inited = 0;
 
@@ -102,11 +122,11 @@ static void Reset_IOP(void)
 static void display_bmp(u16 W, u16 H, u32 *data)
 {
 	gs_print_bitmap(
-	(gs_get_max_x() - W) / 2,   //x
-	(gs_get_max_y() - H) / 2,   //y
-	W,                          //w
-	H,                          //h
-	data                        //array
+		(gs_get_max_x() - W) / 2, //x
+		(gs_get_max_y() - H) / 2, //y
+		W,						  //w
+		H,						  //h
+		data					  //array
 	);
 
 #ifdef __DEBUG_PRINTF__
@@ -122,34 +142,34 @@ static void InitPS2(void)
 	SifLoadFileInit();
 	fioInit();
 
+	sbv_patch_enable_lmb();
 	sbv_patch_disable_prefix_check();
-	SifLoadModule("rom0:SIO2MAN", 0, NULL);
-	SifLoadModule("rom0:MCMAN", 0, NULL);
-	SifLoadModule("rom0:MCSERV", 0, NULL);
-	SifLoadModule("rom0:PADMAN", 0, NULL);
+	SifExecModuleBuffer(SIO2MAN_irx, size_SIO2MAN_irx, 0, NULL, NULL);
+	SifExecModuleBuffer(PADMAN_irx, size_PADMAN_irx, 0, NULL, NULL);
+	SifExecModuleBuffer(MCMAN_irx, size_MCMAN_irx, 0, NULL, NULL);
+	SifExecModuleBuffer(MCSERV_irx, size_MCSERV_irx, 0, NULL, NULL);
+	PadInitPads();
+	mcInit(MC_TYPE_XMC);
 
-	//Faltaba iniciar la MC (alexparrado)
-	mcInit(MC_TYPE_MC);
-
-	setupPad();
-	waitAnyPadReady();
 }
 
 //write &embed_file to path
 // returns:
 // -1 fail to open | -2 failed to write | 0 succes
-static int write_embed(void *embed_file, const int embed_size, char* folder, char* filename, int mcport)
+static int write_embed(void *embed_file, const int embed_size, char *folder, char *filename, int mcport)
 {
 	int fd, ret;
 	char target[MAX_PATH];
 	sprintf(target, "mc%u:/%s/%s", mcport, folder, filename);
-	if ((ret = open(target, O_RDONLY)) < 0)  //if not exist
+	if ((ret = open(target, O_RDONLY)) < 0) //if not exist
 	{
-		if ((fd = open(target, O_CREAT | O_WRONLY | O_TRUNC)) < 0) {
+		if ((fd = open(target, O_CREAT | O_WRONLY | O_TRUNC)) < 0)
+		{
 			return -1;
 		}
 		ret = write(fd, embed_file, embed_size);
-		if (ret != embed_size) {
+		if (ret != embed_size)
+		{
 			return -2;
 		}
 		close(fd);
@@ -171,54 +191,125 @@ static int install(int mcport, int icon_variant)
 	mcSync(0, NULL, &ret);
 
 	//If there's no MC, we have an error:
-	if (ret != -1){return 1;}
+	if (ret != -1)
+	{
+		return 1;
+	}
 
 	//If it is not a PS2 MC, we have an error:
-	if (mc_Type != 2){return 2;}
+	if (mc_Type != 2)
+	{
+		return 2;
+	}
 
 	//If there's no free space, we have an error:
-	if (mc_Free < 1727){return 3;}
+	if (mc_Free < 1727)
+	{
+		return 3;
+	}
 
 	//If the files exists, we have an error:
-	if ( mcport == 0){
-	if (file_exists("mc0:/OPENTUNA/icon.icn")) {return 4;}
-	if (file_exists("mc0:/OPENTUNA/icon.sys")) {return 4;}
-	if (file_exists("mc0:/APPS/icon.sys")) {return 5;}
-	if (file_exists("mc0:/APPS/tunacan.icn")) {return 5;}
-	if (file_exists("mc0:/APPS/ULE.ELF")) {return 5;}
-	if (file_exists("mc0:/APPS/OPNPS2LD.ELF")) {return 5;}
-	} else {
-	if (file_exists("mc1:/OPENTUNA/icon.icn")) {return 4;}
-	if (file_exists("mc1:/OPENTUNA/icon.sys")) {return 4;}
-	if (file_exists("mc1:/APPS/icon.sys")) {return 5;}
-	if (file_exists("mc1:/APPS/tunacan.icn")) {return 5;}
-	if (file_exists("mc1:/APPS/ULE.ELF")) {return 5;}
-	if (file_exists("mc1:/APPS/OPNPS2LD.ELF")) {return 5;}
+	if (mcport == 0)
+	{
+		if (file_exists("mc0:/OPENTUNA/icon.icn"))
+		{
+			return 4;
+		}
+		if (file_exists("mc0:/OPENTUNA/icon.sys"))
+		{
+			return 4;
+		}
+		if (file_exists("mc0:/APPS/icon.sys"))
+		{
+			return 5;
+		}
+		if (file_exists("mc0:/APPS/tunacan.icn"))
+		{
+			return 5;
+		}
+		if (file_exists("mc0:/APPS/ULE.ELF"))
+		{
+			return 5;
+		}
+		if (file_exists("mc0:/APPS/OPNPS2LD.ELF"))
+		{
+			return 5;
+		}
+	}
+	else
+	{
+		if (file_exists("mc1:/OPENTUNA/icon.icn"))
+		{
+			return 4;
+		}
+		if (file_exists("mc1:/OPENTUNA/icon.sys"))
+		{
+			return 4;
+		}
+		if (file_exists("mc1:/APPS/icon.sys"))
+		{
+			return 5;
+		}
+		if (file_exists("mc1:/APPS/tunacan.icn"))
+		{
+			return 5;
+		}
+		if (file_exists("mc1:/APPS/ULE.ELF"))
+		{
+			return 5;
+		}
+		if (file_exists("mc1:/APPS/OPNPS2LD.ELF"))
+		{
+			return 5;
+		}
 	}
 	ret = mcMkDir(mcport, 0, "OPENTUNA");
 	mcSync(0, NULL, &ret);
 	ret = mcMkDir(mcport, 0, "APPS");
 	mcSync(0, NULL, &ret);
-	retorno = -12;///to ensure installation quits if none of the hacked icons are written
-	       if (icon_variant ==  SLIMS) {
-		retorno = write_embed(&opentuna_slims, size_opentuna_slims, "OPENTUNA","icon.icn",mcport);
-	} else if (icon_variant ==   FATS) {
-		retorno = write_embed(&opentuna_fats, size_opentuna_fats, "OPENTUNA", "icon.icn", mcport);
-	} else if (icon_variant == FAT170) {
-		retorno = write_embed(&opentuna_fat170, size_opentuna_fat170, "OPENTUNA","icon.icn",mcport);
+	retorno = -12; ///to ensure installation quits if none of the hacked icons are written
+	if (icon_variant == SLIMS)
+	{
+		retorno = write_embed(&opentuna_slims, size_opentuna_slims, "OPENTUNA", "icon.icn", mcport);
 	}
-	if (retorno < 0) {return 6;}
+	else if (icon_variant == FATS)
+	{
+		retorno = write_embed(&opentuna_fats, size_opentuna_fats, "OPENTUNA", "icon.icn", mcport);
+	}
+	else if (icon_variant == FAT170)
+	{
+		retorno = write_embed(&opentuna_fat170, size_opentuna_fat170, "OPENTUNA", "icon.icn", mcport);
+	}
+	if (retorno < 0)
+	{
+		return 6;
+	}
 	//<FILES SHARED BY ALL ICONS FROM NOW ON>
-	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA","icon.sys",mcport);
-	if (retorno < 0) {return 6;}
-	retorno = write_embed(&apps_sys, size_apps_sys, "APPS","icon.sys",mcport);
-	if (retorno < 0) {return 6;}
-	retorno = write_embed(&apps_icn, size_apps_icn, "APPS","tunacan.icn",mcport);
-	if (retorno < 0) {return 6;}
-	retorno = write_embed(&ule_elf, size_ule_elf, "APPS","ULE.ELF",mcport);
-	if (retorno < 0) {return 6;}
-	retorno = write_embed(&opl_elf, size_opl_elf, "APPS","OPNPS2LD.ELF",mcport);
-	if (retorno < 0) {return 6;}
+	retorno = write_embed(&opentuna_sys, size_opentuna_sys, "OPENTUNA", "icon.sys", mcport);
+	if (retorno < 0)
+	{
+		return 6;
+	}
+	retorno = write_embed(&apps_sys, size_apps_sys, "APPS", "icon.sys", mcport);
+	if (retorno < 0)
+	{
+		return 6;
+	}
+	retorno = write_embed(&apps_icn, size_apps_icn, "APPS", "tunacan.icn", mcport);
+	if (retorno < 0)
+	{
+		return 6;
+	}
+	retorno = write_embed(&ule_elf, size_ule_elf, "APPS", "ULE.ELF", mcport);
+	if (retorno < 0)
+	{
+		return 6;
+	}
+	retorno = write_embed(&opl_elf, size_opl_elf, "APPS", "OPNPS2LD.ELF", mcport);
+	if (retorno < 0)
+	{
+		return 6;
+	}
 
 #ifdef __DEBUG_PRINTF__
 	printf("installation finished\n");
@@ -249,10 +340,11 @@ static int install(int mcport, int icon_variant)
 
 static void CleanUp(void) //trimmed from FMCB
 {
-	if (pad_inited) {
-		padPortClose(0,0);
-		padPortClose(1,0);
-		padEnd(); 
+	if (pad_inited)
+	{
+		padPortClose(0, 0);
+		padPortClose(1, 0);
+		padEnd();
 	}
 
 	Reset_IOP();
@@ -291,19 +383,60 @@ static void PS2_browser(void)
 	LoadExecPS2("rom0:OSDSYS", 0, NULL);
 }
 
-int main (int argc, char *argv[])
+void error_message(int iz)
+{
+	display_bmp(640, 448, error);
+	switch (iz)
+	{
+	case 1:
+		gs_print_bitmap(192, 343, 256, 40, MensajeA);
+		break;
+	case 2:
+		gs_print_bitmap(192, 343, 256, 40, MensajeB);
+		break;
+	case 3:
+		gs_print_bitmap(192, 343, 256, 40, MensajeC);
+		break;
+	case 4:
+		gs_print_bitmap(192, 343, 256, 40, MensajeD);
+		break;
+	case 5:
+		gs_print_bitmap(192, 343, 256, 40, MensajeE);
+		break;
+
+	case 6:
+		gs_print_bitmap(192, 343, 256, 40, MensajeF);
+		break;
+	default:
+		break;
+	}
+}
+
+int wait_key(int key)
+{
+	int new_pad;
+	while (1)
+	{
+		new_pad = ReadCombinedPadStatus();
+		if (new_pad & key)
+			return new_pad;
+	}
+}
+
+int main(int argc, char *argv[])
 {
 	int fdn, icontype;
 	unsigned long int ROM_VERSION;
 	char romver[5];
 	VMode = NTSC;
-	int mcport;
+	int mcport, state;
+	int key;
 
 	// Loads Needed modules
 	InitPS2();
 
-	gs_reset(); // Reset GS
-	if((fdn = open("rom0:ROMVER", O_RDONLY)) > 0) // Reading ROMVER
+	gs_reset();									   // Reset GS
+	if ((fdn = open("rom0:ROMVER", O_RDONLY)) > 0) // Reading ROMVER
 	{
 		read(fdn, romver, 4);
 		close(fdn);
@@ -319,48 +452,102 @@ int main (int argc, char *argv[])
 	else
 		gs_init(NTSC_640_448_32);
 
-	display_bmp(640, 448, WELCOME);
-
-	waitAnyPadReady();
 	pad_inited = 1;
 	icontype = GetIconType(ROM_VERSION);
-	int iz = 1;
-	int menuactual = 101;//101: Initial Menu, 102: Installing (not needed), 103: Error, 104: Done
+	int iz = 0;
 
-	display_bmp(640, 448, WELCOME);//Again, just in case of an old japanese console
-	while (1) {
-		readPad();
+	if (icontype != UNSUPPORTED)
+		state = STATE_MC0;
+	else
+		state = STATE_UNSUPPORTED;
 
-		if (((new_pad & PAD_L1) && (menuactual == 101)) || ((new_pad & PAD_R1) && (menuactual == 101))) {
-			menuactual = 102;
-			if (new_pad & PAD_L1)// manual install
+	while (1)
+	{
+
+		switch (state)
+		{
+		case STATE_MC0:
+			mcport = 0;
+			display_bmp(640, 448, INST_SLOT_1);
+
+			key = wait_key(-1);
+
+			if ((key & PAD_CROSS) || (key & PAD_CIRCLE))
 			{
-				//ASK_MCPORT(mcport)
-				display_bmp(640, 448, wait);
-				iz = install(mcport,icontype);
-			} else {// auto install (R1)
-				//ASK_MCPORT(mcport)
-				display_bmp(640, 448, wait);
-				iz = install(mcport,icontype);
+				state = STATE_INSTALL;
+				break;
 			}
-			if(iz == 0){
-				menuactual = 104;
-				display_bmp(640, 448, complete);
-			}
-			else {
-				menuactual = 103;
-				display_bmp(640, 448, error);
-				if(iz == 1){gs_print_bitmap(192, 343, 256, 40, MensajeA);}
-				else if(iz == 2){gs_print_bitmap(192, 343, 256, 40, MensajeB);}
-				else if(iz == 3){gs_print_bitmap(192, 343, 256, 40, MensajeC);}
-				else if(iz == 4){gs_print_bitmap(192, 343, 256, 40, MensajeD);}
-				else if(iz == 5){gs_print_bitmap(192, 343, 256, 40, MensajeE);}
-				else if(iz == 6){gs_print_bitmap(192, 343, 256, 40, MensajeF);}
-			}
-		}
 
-		else if ((new_pad & PAD_START) && (menuactual == 103)) {PS2_browser();}
-		else if ((new_pad & PAD_START) && (menuactual == 104)) {PS2_browser();}
+			if ((key & PAD_SELECT) || (key & PAD_L1))
+			{
+				state = STATE_MC1;
+				break;
+			}
+
+			state = STATE_BROWSER;
+
+			break;
+
+		case STATE_MC1:
+			mcport = 1;
+			display_bmp(640, 448, INST_SLOT_2); //Again, just in case of an old japanese console
+
+			key = wait_key(-1);
+
+			if ((key & PAD_CROSS) || (key & PAD_CIRCLE))
+			{
+				state = STATE_INSTALL;
+				break;
+			}
+
+			if ((key & PAD_SELECT) || (key & PAD_L1))
+			{
+				state = STATE_MC0;
+				break;
+			}
+
+			state = STATE_BROWSER;
+
+			break;
+
+		case STATE_UNSUPPORTED:
+
+			display_bmp(640, 448, NON_COMPATIBLE); //Again, just in case of an old japanese console
+			key = wait_key(PAD_START);
+			state = STATE_BROWSER;
+
+			break;
+
+		case STATE_INSTALL:
+			display_bmp(640, 448, wait);
+			iz = install(mcport, icontype);
+
+			if (iz)
+				state = STATE_ERROR;
+			else
+				state = STATE_FINISH;
+
+			break;
+
+		case STATE_FINISH:
+			display_bmp(640, 448, complete);
+			key = wait_key(PAD_START);
+			state = STATE_BROWSER;
+
+			break;
+		case STATE_ERROR:
+			error_message(iz);
+			key = wait_key(PAD_START);
+
+			state = STATE_BROWSER;
+
+		case STATE_BROWSER:
+			PS2_browser();
+			break;
+
+		default:
+			break;
+		}
 	}
 
 	return 0;
