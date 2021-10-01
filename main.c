@@ -188,7 +188,7 @@ static int install(int mcport, int icon_variant)
 	static int mc_Type, mc_Free, mc_Format;
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
-	mcSync(0, NULL, &ret);
+	mcSync(0, NULL, &ret);	
 
 	//If there's no MC, we have an error:
 	if (ret != -1)
@@ -197,7 +197,7 @@ static int install(int mcport, int icon_variant)
 	}
 
 	//If it is not a PS2 MC, we have an error:
-	if (mc_Type != 2)
+	if (mc_Type != sceMcTypePS2)
 	{
 		return 2;
 	}
