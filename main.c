@@ -1,5 +1,9 @@
 //#define __DEBUG_PRINTF__
-
+#ifdef __DEBUG_PRINTF__
+#define PRINTF(arg...) printf(arg...)
+#else 	
+#define PRINTF(arg...)
+#endif
 /*------------------------------------------------------------*/
 #include "main.h"
 #include "complete.h"
@@ -129,9 +133,7 @@ static void display_bmp(u16 W, u16 H, u32 *data)
 		data					  //array
 	);
 
-#ifdef __DEBUG_PRINTF__
-	printf("array displayed\n");
-#endif
+	PRINTF("array displayed\n");
 }
 //=============================================================
 
@@ -174,9 +176,7 @@ static int write_embed(void *embed_file, const int embed_size, char *folder, cha
 		close(fd);
 	}
 
-#ifdef __DEBUG_PRINTF__
-	printf("embed file written: %s\n", target);
-#endif
+	PRINTF("embed file written: %s\n", target);
 	return 0;
 }
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -188,9 +188,7 @@ static int install(int mcport, int icon_variant)
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
 	mcSync(0, NULL, &ret);
-#ifdef __DEBUG_PRINTF__
-	printf("mc_Type: %d\n", mc_Type);
-#endif
+	PRINTF("mc_Type: %d\n", mc_Type);
 
 	//If there's no MC, we have an error:
 	if (ret != -1)
@@ -313,9 +311,7 @@ static int install(int mcport, int icon_variant)
 		return 6;
 	}
 
-#ifdef __DEBUG_PRINTF__
-	printf("installation finished\n");
-#endif
+	PRINTF("installation finished\n");
 
 	static sceMcTblGetDir mcDirAAA[64] __attribute__((aligned(64)));
 	static sceMcStDateTime maximahora; //Maxium Timestamp, for the ones who does not speak Spanish
@@ -332,9 +328,7 @@ static int install(int mcport, int icon_variant)
 	mcSetFileInfo(mcport, 0, "OPENTUNA", mcDirAAA, 0x02);
 	mcSync(0, NULL, &ret);
 
-#ifdef __DEBUG_PRINTF__
-	printf("timestamp changed\n");
-#endif
+	PRINTF("timestamp changed\n");
 
 	return 0;
 }
