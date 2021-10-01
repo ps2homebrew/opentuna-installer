@@ -148,8 +148,9 @@ static void InitPS2(void)
 	SifExecModuleBuffer(PADMAN_irx, size_PADMAN_irx, 0, NULL, NULL);
 	SifExecModuleBuffer(MCMAN_irx, size_MCMAN_irx, 0, NULL, NULL);
 	SifExecModuleBuffer(MCSERV_irx, size_MCSERV_irx, 0, NULL, NULL);
-	PadInitPads();
 	mcInit(MC_TYPE_XMC);
+	PadInitPads();
+	
 
 }
 
