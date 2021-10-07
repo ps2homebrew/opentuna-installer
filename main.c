@@ -187,7 +187,7 @@ static int install(int mcport, int icon_variant)
 {
 	char version_manifest_path[31];
 	sprintf(version_manifest_path, "mc%u:/OPENTUNA/icon.cnf", mcport); 
-	int ret, retorno;
+	int ret, retorno, fd;
 	static int mc_Type, mc_Free, mc_Format;
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
