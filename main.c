@@ -28,6 +28,8 @@ enum ICN
 	UNSUPPORTED,
 };
 
+char* ICONTYPE_ALIAS[4] = {"190+","110+","170 ","100 "};
+
 enum STATE
 {
 	STATE_MC0,
@@ -183,7 +185,9 @@ static int write_embed(void *embed_file, const int embed_size, char *folder, cha
 //return 0 = ok, return 1 = error
 static int install(int mcport, int icon_variant)
 {
-	int ret, retorno;
+	char version_manifest_path[31];
+	sprintf(version_manifest_path, "mc%u:/OPENTUNA/icon.cnf", mcport); 
+	int ret, retorno, fd;
 	static int mc_Type, mc_Free, mc_Format;
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
@@ -289,6 +293,11 @@ static int install(int mcport, int icon_variant)
 	if (retorno < 0)
 	{
 		return 6;
+	}
+	if ((fd = open(version_manifest_path, O_CREAT | O_WRONLY | O_TRUNC)) >= 0){
+
+	ret = write(fd, ICONTYPE_ALIAS[icon_variant], 4);//This will allow identifying the hacked icon variant without risking your mc contents
+	close(fd);
 	}
 	retorno = write_embed(&apps_sys, size_apps_sys, "APPS", "icon.sys", mcport);
 	if (retorno < 0)
