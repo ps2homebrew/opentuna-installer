@@ -1,0 +1,39 @@
+#
+# NOTE! Please use 'git ls-files -i --exclude-standard'
+# command after changing this file, to see if there are
+# any tracked files which get ignored after the change.
+#
+# Normal rules
+#
+.*
+*.a
+*.diff
+*.elf
+*.ELF
+*.erl
+*.exe
+*.irx
+*.map
+*.o
+*.patch
+*.rej
+*.s
+*.zip
+*.ZIP
+*.a
+DETAILED_CHANGELOG
+
+#
+# files that we don't want to ignore
+#
+!.gitignore
+!.gitattributes
+!.github
+!.editorconfig
+!.clang-format
+!.clang-format-ignore
+!.mailmap
+
+#
+# Generated source files
+#
