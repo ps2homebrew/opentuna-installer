@@ -21,6 +21,7 @@
 #define NEWLIB_PORT_AWARE
 #include <fileio.h>
 
+#include "pad.h"
 
 #define MAX_PATH 260
 
@@ -33,7 +34,7 @@
 extern int VMode;
 
 typedef enum {
-	PAL_640_512_32,	
+	PAL_640_512_32,
 	NTSC_640_448_32
 } gs_video_mode;
 

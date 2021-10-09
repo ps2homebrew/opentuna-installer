@@ -6,18 +6,18 @@
 #endif
 /*------------------------------------------------------------*/
 #include "main.h"
-#include "complete.h"
-#include "error.h"
-#include "wait.h"
-#include "MensajeA.h"
-#include "MensajeB.h"
-#include "MensajeC.h"
-#include "MensajeD.h"
-#include "MensajeE.h"
-#include "MensajeF.h"
-#include "NON_COMPATIBLE.h"
-#include "INST_SLOT_2.h"
-#include "INST_SLOT_1.h"
+#include "BMP/complete.h"
+#include "BMP/error.h"
+#include "BMP/wait.h"
+#include "BMP/MensajeA.h"
+#include "BMP/MensajeB.h"
+#include "BMP/MensajeC.h"
+#include "BMP/MensajeD.h"
+#include "BMP/MensajeE.h"
+#include "BMP/MensajeF.h"
+#include "BMP/NON_COMPATIBLE.h"
+#include "BMP/INST_SLOT_2.h"
+#include "BMP/INST_SLOT_1.h"
 
 enum ICN
 {
@@ -161,11 +161,11 @@ static void InitPS2(void)
 // -1 fail to open | -2 failed to write | 0 succes
 static int write_embed(void *embed_file, const int embed_size, char *folder, char *filename, int mcport)
 {
-	int fd, ret;
 	char target[MAX_PATH];
-	sprintf(target, "mc%u:/%s/%s", mcport, folder, filename);
-	if ((ret = open(target, O_RDONLY)) < 0) //if not exist
+	sprintf(target, "mc%d:/%s/%s", mcport, folder, filename);
+	if (open(target, O_RDONLY) < 0) //if not exist
 	{
+		int ret, fd;
 		if ((fd = open(target, O_CREAT | O_WRONLY | O_TRUNC)) < 0)
 		{
 			return -1;
@@ -186,7 +186,7 @@ static int write_embed(void *embed_file, const int embed_size, char *folder, cha
 static int install(int mcport, int icon_variant)
 {
 	char version_manifest_path[31];
-	sprintf(version_manifest_path, "mc%u:/OPENTUNA/icon.cnf", mcport); 
+	sprintf(version_manifest_path, "mc%d:/OPENTUNA/icon.cnf", mcport);
 	int ret, retorno, fd;
 	static int mc_Type, mc_Free, mc_Format;
 
@@ -418,10 +418,9 @@ void error_message(int iz)
 
 int wait_key(int key)
 {
-	int new_pad;
 	while (1)
 	{
-		new_pad = ReadCombinedPadStatus();
+		int new_pad = ReadCombinedPadStatus();
 		if (new_pad & key)
 			return new_pad;
 	}
@@ -430,8 +429,7 @@ int wait_key(int key)
 int main(int argc, char *argv[])
 {
 	int fdn, icontype;
-	unsigned long int ROM_VERSION;
-	char romver[5];
+	unsigned long int ROM_VERSION = 0x170;
 	VMode = NTSC;
 	int mcport, state;
 	int key;
@@ -442,6 +440,7 @@ int main(int argc, char *argv[])
 	gs_reset();									   // Reset GS
 	if ((fdn = open("rom0:ROMVER", O_RDONLY)) > 0) // Reading ROMVER
 	{
+		char romver[5];
 		read(fdn, romver, 4);
 		close(fdn);
 
