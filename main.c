@@ -29,6 +29,7 @@ enum ICN
 };
 
 char* ICONTYPE_ALIAS[4] = {"190+","110+","170 ","100 "};
+char* ICONFILE_NAMES[4] = {"slims","fats","fat170","protok"};
 
 enum STATE
 {
@@ -185,10 +186,11 @@ static int write_embed(void *embed_file, const int embed_size, char *folder, cha
 //return 0 = ok, return 1 = error
 static int install(int mcport, int icon_variant)
 {
-	char version_manifest_path[31];
-	sprintf(version_manifest_path, "mc%d:/OPENTUNA/icon.cnf", mcport);
-	int ret, retorno, fd;
+	char version_manifest_path[64];
+	int ret, retorno,fd;
 	static int mc_Type, mc_Free, mc_Format;
+	
+	sprintf(version_manifest_path, "mc%d:/OPENTUNA/icon_%s.cnf",mcport,ICONFILE_NAMES[icon_variant]);
 
 	mcGetInfo(mcport, 0, &mc_Type, &mc_Free, &mc_Format);
 	mcSync(0, NULL, &ret);
