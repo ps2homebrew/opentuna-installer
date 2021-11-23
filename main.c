@@ -139,7 +139,58 @@ static void display_bmp(u16 W, u16 H, u32 *data)
 	PRINTF("array displayed\n");
 }
 //=============================================================
+/// DeleteFolder(); function was obtained from softdev1 installer, wich is based on SP193's FreeMcBoot installer.
+//thanks to SP193 for all his work
+static int DeleteFolder(const char *folder)
+{
+	DIR *d = opendir(folder);
+	size_t path_len = strlen(folder);
+	int r = -1;
 
+	if (d)
+	{
+		//scr_printf("Detected [%s], deleting...\n",folder);
+		struct dirent *p;
+
+		r = 0;
+		while (!r && (p = readdir(d)))
+		{
+			int r2 = -1;
+			char *buf;
+			size_t len;
+
+			/* Skip the names "." and ".." as we don't want to recurse on them. */
+			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+				continue;
+
+			len = path_len + strlen(p->d_name) + 2;
+			buf = malloc(len);
+
+			if (buf)
+			{
+				struct stat statbuf;
+
+				snprintf(buf, len, "%s/%s", folder, p->d_name);
+				if (!stat(buf, &statbuf))
+				{
+					if (S_ISDIR(statbuf.st_mode))
+						r2 = DeleteFolder(buf);
+					else
+						r2 = unlink(buf);
+				}
+				free(buf);
+			}
+			r = r2;
+		}
+		closedir(d);
+	}
+
+	if (!r)
+		r = rmdir(folder);
+
+	return r;
+}
+//=============================================================
 static void InitPS2(void)
 {
 	Reset_IOP();
@@ -153,6 +204,7 @@ static void InitPS2(void)
 	SifExecModuleBuffer(PADMAN_irx, size_PADMAN_irx, 0, NULL, NULL);
 	SifExecModuleBuffer(MCMAN_irx, size_MCMAN_irx, 0, NULL, NULL);
 	SifExecModuleBuffer(MCSERV_irx, size_MCSERV_irx, 0, NULL, NULL);
+    sbv_patch_fileio();// THANKS fjtrujy
 	mcInit(MC_TYPE_XMC);
 	PadInitPads();
 }
@@ -187,6 +239,7 @@ static int write_embed(void *embed_file, const int embed_size, char *folder, cha
 static int install(int mcport, int icon_variant)
 {
 	char version_manifest_path[64];
+    char temp_path[32];
 	int ret, retorno,fd;
 	static int mc_Type, mc_Free, mc_Format;
 	
@@ -213,7 +266,14 @@ static int install(int mcport, int icon_variant)
 	{
 		return 3;
 	}
-
+    
+    sprintf(temp_path,"mc%u:APPS", mcport);
+		DeleteFolder(temp_path);
+    sprintf(temp_path,"mc%u:FORTUNA", mcport);
+		DeleteFolder(temp_path);
+	sprintf(temp_path,"mc%u:OPENTUNA", mcport);
+		DeleteFolder(temp_path);
+    
 	//If the files exists, we have an error:
 	if (mcport == 0)
 	{
