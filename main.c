@@ -139,7 +139,7 @@ static void display_bmp(u16 W, u16 H, u32 *data)
 	PRINTF("array displayed\n");
 }
 //=============================================================
-/// DeleteFolder(); function was obtained from softdev1 installer, wich is based on SP193's FreeMcBoot installer.
+/// DeleteFolder(); function was obtained from SP193's FreeMcBoot installer.
 //thanks to SP193 for all his work
 static int DeleteFolder(const char *folder)
 {
